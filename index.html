@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Método de Steffensen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+
+  <!-- ================= ENCABEZADO ================= -->
+  <header class="encabezado">
+    <div class="contenedor">
+      <p class="sobretitulo">Métodos Numéricos · MAT-205 · UAGRM</p>
+      <h1>Método de Steffensen</h1>
+      <p class="bajada">Encuentra raíces de f(x) = 0 con convergencia cuadrática y sin derivadas.</p>
+      <div class="formula-principal" aria-label="Fórmula del método de Steffensen">
+        <span>x<sub>n+1</sub> = x<sub>n</sub> −</span>
+        <span class="frac grande"><span>f(x<sub>n</sub>)²</span><span>f(x<sub>n</sub> + f(x<sub>n</sub>)) − f(x<sub>n</sub>)</span></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <!-- ================= ENTRADA DE DATOS ================= -->
+    <section class="panel" aria-labelledby="tituloDatos">
+      <h2 id="tituloDatos">Datos de entrada</h2>
+
+      <form id="formulario" autocomplete="off" novalidate>
+        <label for="funcion">Función a resolver f(x)</label>
+        <input id="funcion" type="text" value="exp(-x) - x" spellcheck="false" autocapitalize="off" maxlength="300" class="mono" aria-describedby="interpretacion">
+        <p id="interpretacion" class="interpretacion" aria-live="polite"></p>
+        <p class="ayuda">Puedes escribir <code>exp(-x) - x</code>, <code>x^3 - 2</code>, <code>sin(x)</code> o también la sintaxis de JavaScript <code>Math.exp(-x) - x</code>.</p>
+
+        <details class="sintaxis">
+          <summary>Consultar sintaxis y casos de uso</summary>
+          <table class="tabla-sintaxis">
+            <thead><tr><th>Escribe</th><th>Significa</th></tr></thead>
+            <tbody>
+              <tr><td><code>x^2</code> o <code>x**2</code></td><td>x al cuadrado</td></tr>
+              <tr><td><code>sqrt(x)</code></td><td>raíz cuadrada</td></tr>
+              <tr><td><code>exp(x)</code> o <code>e^x</code></td><td>e elevado a x</td></tr>
+              <tr><td><code>ln(x)</code> o <code>log(x)</code></td><td>logaritmo natural</td></tr>
+              <tr><td><code>log10(x)</code></td><td>logaritmo base 10</td></tr>
+              <tr><td><code>sin(x)</code>, <code>sen(x)</code>, <code>cos(x)</code>, <code>tan(x)</code></td><td>trigonométricas (x en radianes)</td></tr>
+              <tr><td><code>abs(x)</code></td><td>valor absoluto</td></tr>
+              <tr><td><code>pi</code>, <code>e</code></td><td>constantes π y e</td></tr>
+              <tr><td><code>2x</code>, <code>3(x+1)</code></td><td>multiplicación (también puedes usar <code>*</code>)</td></tr>
+              <tr><td><code>pow(x, 3)</code></td><td>x elevado a 3</td></tr>
+            </tbody>
+          </table>
+          <p class="ayuda">Los decimales se escriben con punto: <code>0.5</code>. En x₀ y la tolerancia también se acepta coma, fracciones y constantes (<code>0,5</code>, <code>1/2</code>, <code>pi/6</code>, <code>10^-6</code>).</p>
+          <p class="etiqueta-chips">Ejemplos (clic para probar):</p>
+          <div id="ejemplos" class="chips"></div>
+        </details>
+
+        <div class="fila-campos">
+          <div>
+            <label for="x0">Aproximación inicial x₀</label>
+            <input id="x0" type="text" inputmode="decimal" value="0.5" maxlength="40" class="mono">
+          </div>
+          <div>
+            <label for="tol">Tolerancia</label>
+            <input id="tol" type="text" inputmode="decimal" value="1e-6" maxlength="40" class="mono">
+          </div>
+          <div>
+            <label for="maxIter">Límite de iteraciones</label>
+            <input id="maxIter" type="text" inputmode="numeric" value="100" maxlength="6" class="mono">
+          </div>
+        </div>
+
+        <div class="botones">
+          <button type="submit" class="boton primario">Calcular raíz</button>
+          <button type="button" id="btnLimpiar" class="boton">Limpiar</button>
+        </div>
+      </form>
+
+      <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- ================= RESULTADOS ================= -->
+    <div id="resultados" hidden>
+
+      <section class="datos-resumen" aria-label="Resumen de resultados">
+        <div class="dato principal">
+          <span id="resTituloRaiz" class="dato-titulo">Raíz aproximada</span>
+          <span id="resRaiz" class="dato-valor mono">—</span>
+        </div>
+        <div class="dato">
+          <span class="dato-titulo">f(raíz)</span>
+          <span id="resF" class="dato-valor mono">—</span>
+        </div>
+        <div class="dato">
+          <span class="dato-titulo">Iteraciones</span>
+          <span id="resIter" class="dato-valor mono">—</span>
+        </div>
+        <div class="dato">
+          <span class="dato-titulo">Evaluaciones de f</span>
+          <span id="resEval" class="dato-valor mono">—</span>
+        </div>
+        <div class="dato">
+          <span class="dato-titulo">Estado</span>
+          <span id="resEstado" class="dato-valor">—</span>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="tituloTabla">
+        <div class="titulo-con-accion">
+          <h2 id="tituloTabla">Tabla de iteraciones</h2>
+          <button type="button" id="btnCSV" class="boton pequeño">Descargar CSV</button>
+        </div>
+        <p class="ayuda">Haz clic en una fila para ver el cálculo paso a paso.</p>
+        <div class="tabla-y-detalle">
+          <div class="tabla-scroll">
+            <table class="tabla-iteraciones">
+              <thead>
+                <tr>
+                  <th>n</th><th>x<sub>n</sub></th><th>f(x<sub>n</sub>)</th>
+                  <th>z = x<sub>n</sub> + f(x<sub>n</sub>)</th><th>f(z)</th>
+                  <th>x<sub>n+1</sub></th><th>Error |x<sub>n+1</sub> − x<sub>n</sub>|</th>
+                </tr>
+              </thead>
+              <tbody id="tablaCuerpo"></tbody>
+            </table>
+            <p id="tablaVacia" class="suave tabla-vacia" hidden>El método se detuvo antes de completar una iteración.</p>
+          </div>
+          <aside id="detalle" class="detalle" aria-live="polite"></aside>
+        </div>
+      </section>
+
+      <div class="graficas">
+        <section class="panel" aria-labelledby="tituloGraf1">
+          <h2 id="tituloGraf1">Gráfica de la función</h2>
+          <div id="graficaFuncion" class="grafica"></div>
+        </section>
+        <section class="panel" aria-labelledby="tituloGraf2">
+          <h2 id="tituloGraf2">Convergencia del error</h2>
+          <div id="graficaError" class="grafica"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">
+      <p><strong>Integrantes:</strong> Ariane Somoza Rocha · Jade Ibañez Ayala · Miguel Christhofer Ugarte Frias · Susana Camacho Lobo · Klara Crisel Delgado Rivero · Amine Carolina Joaquin Illescas · Carlos Andres Villagra Siles</p>
+      <p>Docente: Ing. Luis Antonio Gianella Peredo · Facultad de Ingeniería en Ciencias de la Computación y Telecomunicaciones · Gestión 2-2026</p>
+    </div>
+  </footer>
+
+  <script src="parser.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
